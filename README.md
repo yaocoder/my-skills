@@ -7,6 +7,7 @@ AionUI / OpenCode 自定义技能仓库。
 | 技能 | 描述 |
 |------|------|
 | [ppt-content-designer](./skills/ppt-content-designer/) | PPT 内容策划与设计规范生成器。将原始需求/文档转化为逐页内容大纲 + 视觉设计指引 |
+| [uat-tester](./skills/uat-tester/) | 通用用户验收（UAT）测试体系执行器，框架无关、项目无关。先文档化角色矩阵与追溯矩阵，再落地自动化脚本（Playwright/WebdriverIO/Appium/Detox）。内建四条防回归原则：首屏零噪音、深链接抽屉覆盖、数据范围按角色隔离、幂等造数与隔离 |
 
 ## 安装
 
