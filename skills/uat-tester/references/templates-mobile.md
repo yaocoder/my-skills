@@ -101,7 +101,7 @@ export async function writeTokens() {
 }
 
 // wdio capability 里注入：
-// 'appium:launchArgs': { '-testToken': fs.readFileSync(tokenFile('supervisor'), 'utf8') }
+// 'appium:launchArgs': { '-testToken': fs.readFileSync(tokenFile('reviewer'), 'utf8') }
 ```
 
 ### 方案 B：UI 登录（每用例重复，最稳但慢）
@@ -111,7 +111,7 @@ export async function loginViaUi(driver: WebdriverIO.Browser, username: string, 
   await driver.$('~login-username').setValue(username)
   await driver.$('~login-password').setValue(password)
   await driver.$('~login-submit').click()
-  await driver.$('~nav-workbench').waitForDisplayed({ timeout: 15000 })
+  await driver.$('~nav-dashboard').waitForDisplayed({ timeout: 15000 })
 }
 ```
 
@@ -143,46 +143,46 @@ export class AppLayout {
 import { expect } from 'chai'
 import { tokenFile } from '../fixtures/auth'
 import { readWorld } from '../fixtures/auth'
-import { ensureOrder } from '../fixtures/provision'
+import { ensureResource } from '../fixtures/provision'
 import { loginApi } from '../fixtures/api'
 import { USERS, env } from '../fixtures/env'
 
-describe('督导角色权限专项', () => {
+describe('审核者角色权限专项', () => {
   // §4.1 首屏零噪音：app 启动后首页不得弹错误 toast
   it('落地页零噪音', async () => {
-    // 注入 supervisor token 启动 app（capability 配 -testToken）
+    // 注入 reviewer token 启动 app（capability 配 -testToken）
     await driver.activateApp('com.example.app')
-    await (await driver.$('~nav-workbench')).waitForDisplayed({ timeout: 15000 })
+    await (await driver.$('~nav-dashboard')).waitForDisplayed({ timeout: 15000 })
     // 断言无错误 toast（按实际 UI 元素）
     const toasts = await driver.$$('~error-toast')
     expect(toasts.length).to.equal(0)
   })
 
-  // §4.2 深链接：点进订单详情
-  it('订单详情：依赖数据加载无错误', async () => {
+  // §4.2 深链接：点进资源详情
+  it('资源详情：依赖数据加载无错误', async () => {
     const world = readWorld()
-    const { token } = await loginApi(USERS.ops, env.testPass)
+    const { token } = await loginApi(USERS.admin, env.testPass)
     const title = `UAT-详情-${Date.now()}`
-    const { id } = await ensureOrder(token, { title, storeId: world.storeId })
-    await (await driver.$('~nav-orders')).click()
-    await (await driver.$(`~order-row-${id}`)).click()
-    await (await driver.$('~order-detail-title')).waitForDisplayed({ timeout: 15000 })
-    const text = await (await driver.$('~order-detail-title')).getText()
+    const { id } = await ensureResource(token, { title, deptId: world.deptId })
+    await (await driver.$('~nav-resources')).click()
+    await (await driver.$(`~resource-row-${id}`)).click()
+    await (await driver.$('~resource-detail-title')).waitForDisplayed({ timeout: 15000 })
+    const text = await (await driver.$('~resource-detail-title')).getText()
     expect(text).to.include(title)
   })
 
   // §4.3 数据范围
-  it('数据范围：仅可见本组织订单', async () => {
+  it('数据范围：仅可见本组织资源', async () => {
     const world = readWorld()
-    const { token } = await loginApi(USERS.ops, env.testPass)
+    const { token } = await loginApi(USERS.admin, env.testPass)
     const myTitle = `UAT-本组-${Date.now()}`
     const otherTitle = `UAT-异组-${Date.now()}`
-    await ensureOrder(token, { title: myTitle, storeId: world.storeId })
-    await ensureOrder(token, { title: otherTitle, storeId: world.otherStoreId })
-    await (await driver.$('~nav-orders')).click()
-    const myRow = await driver.$(`~order-row-title-${myTitle}`)
+    await ensureResource(token, { title: myTitle, deptId: world.deptId })
+    await ensureResource(token, { title: otherTitle, deptId: world.otherDeptId })
+    await (await driver.$('~nav-resources')).click()
+    const myRow = await driver.$(`~resource-row-title-${myTitle}`)
     await myRow.waitForDisplayed({ timeout: 15000 })
-    const otherRow = await driver.$$(`~order-row-title-${otherTitle}`)
+    const otherRow = await driver.$$(`~resource-row-title-${otherTitle}`)
     expect(otherRow.length).to.equal(0)
   })
 })

@@ -9,19 +9,17 @@
 | 角色 | 编号 | 可见菜单 | 数据范围 | 关键写权限 | 不可见/无权直达 |
 |---|---|---|---|---|---|
 | 超级管理员 | ROLE_ADMIN | 全部 | ALL | 全部 | — |
-| 业务运营 | ROLE_OPS | 运营/门店/告警 | ALL | 订单/告警处理 | 系统/设备 |
-| 区域经理 | ROLE_REGION | 运营/门店/告警 | ORG(本区及下级) | 订单 | 系统/设备 |
-| 督导 | ROLE_SUPERVISOR | 运营/告警 | ORG(本组织) | 订单验收/名单申报 | 门店管理/系统/设备 |
-| 店长 | ROLE_STORE_MGR | 告警/运营/经营 | STORE(本店) | 名单申报 | 门店管理/系统/设备 |
-| 安全员 | ROLE_SECURITY | 安全中心 | ALL | 告警处理/名单审批 | 门店/系统/设备 |
-| IT 管理员 | ROLE_IT | 系统/设备 | ALL | 用户/角色/设备 | 业务模块 |
+| 业务管理员 | ROLE_MANAGER | 工作台/资源管理/报表 | ALL | 资源管理/报表 | 系统设置 |
+| 编辑者 | ROLE_EDITOR | 工作台/资源管理 | ORG | 资源增删改 | 报表/系统设置 |
+| 审核者 | ROLE_REVIEWER | 工作台/资源管理/报表 | DEPT | 资源审核 | 系统设置 |
+| 普通用户 | ROLE_USER | 工作台/个人中心 | SELF | 个人信息 | 资源管理/报表/系统设置 |
 | 禁用账号 | (disabled) | — | — | — | 全部（登录即拒） |
 
-> 数据范围枚举：ALL=全量 / ORG=本组织及下级 / STORE=本店 / SELF=本人。详见 `roles-data-scope.md`。
+> 数据范围枚举：ALL=全量 / ORG=本组织及下级 / DEPT=本部门 / SELF=本人。详见 `roles-data-scope.md`。
 
 ## 2. 验收清单
 
-> 编号 `<域>-<序号>`，域前缀按模块：G=通用/登录、DASH=驾驶舱、STORE=门店、SEC=安全、OPS=运营、BIZ=经营、DEV=设备、SYS=系统、V=视频、M=移动端...
+> 编号 `<域>-<序号>`，域前缀按模块：AUTH=认证/登录、MENU=菜单/权限、DASH=工作台、RES=资源管理、FLOW=状态流转...
 
 | 验收项 | 优先级 | 说明 |
 |---|---|---|
@@ -34,8 +32,13 @@
 | AUTH-07 | P0 | 登出返回登录页 |
 | MENU-01 | P0 | 各角色菜单可见性按矩阵 |
 | MENU-02 | P0 | 无权直达 URL 被守卫拦截 |
-| DASH-01 | P0 | 驾驶舱首屏渲染 |
-| DASH-02 | P0 | 范围条显示数据范围 |
+| DASH-01 | P0 | 工作台首屏渲染 |
+| DASH-02 | P0 | 工作台数据按权限范围展示 |
+| RES-01 | P0 | 资源列表分页查询 |
+| RES-02 | P0 | 资源新增/编辑/删除 |
+| FLOW-01 | P0 | 资源状态流转：草稿→待审核 |
+| FLOW-02 | P0 | 审核通过：待审核→已发布 |
+| FLOW-03 | P0 | 审核驳回：待审核→已驳回 |
 | ... | | |
 
 ## 3. 用例追溯矩阵
@@ -58,35 +61,35 @@
 
 | 角色 | 断言点 | 用例 | 状态 | 实现文件 |
 |---|---|---|---|---|
-| 督导 | 菜单可见性 / 数据范围 / 可验收 / 名单申报可写 / 定级规则写=403 / 无权直达拦截 / **落地页零噪音 / 深链接抽屉覆盖** | UAT-RBAC-SUP-01~08 | ✅ | rbac-supervisor.spec.ts |
-| 店长 | 菜单可见性 / 数据范围SELF / 工单只读 / 名单申报 / 定级规则写=403 / 无权直达 / **落地页零噪音** | UAT-RBAC-MGR-01~06 | ✅ | rbac-store-manager.spec.ts |
+| 编辑者 | 菜单可见性 / 数据范围ORG / 资源增删改可写 / 审核入口=403 / 无权直达拦截 / **落地页零噪音 / 深链接抽屉覆盖** | UAT-RBAC-EDITOR-01~08 | ✅ | rbac-editor.spec.ts |
+| 普通用户 | 菜单可见性 / 数据范围SELF / 资源只读 / 编辑操作=403 / 无权直达 / **落地页零噪音** | UAT-RBAC-USER-01~06 | ✅ | rbac-user.spec.ts |
 
 ### 3.3 状态流转专项
 
 | 场景 | 状态链 | 用例 | 状态 | 实现文件 |
 |---|---|---|---|---|
-| 手工创建 → 列表可见 | PENDING | UAT-WO-01 | ✅ | workorder-flow.spec.ts |
-| 处理中 → 待验收 | PENDING→PROCESSING→WAITING_VERIFY | UAT-WO-02 | ✅ | workorder-flow.spec.ts |
-| 验收通过 | WAITING_VERIFY→CLOSED | UAT-WO-03 | ✅ | workorder-flow.spec.ts |
-| 验收驳回 | WAITING_VERIFY→REJECTED | UAT-WO-04 | ✅ | workorder-flow.spec.ts |
-| 角色视角差异 | 可验收 vs 只读 | UAT-WO-05 | ✅ | workorder-flow.spec.ts |
+| 手工创建 → 列表可见 | DRAFT | UAT-FLOW-01 | ✅ | resource-flow.spec.ts |
+| 提交审核 | DRAFT→PENDING_REVIEW | UAT-FLOW-02 | ✅ | resource-flow.spec.ts |
+| 审核通过 | PENDING_REVIEW→PUBLISHED | UAT-FLOW-03 | ✅ | resource-flow.spec.ts |
+| 审核驳回 | PENDING_REVIEW→REJECTED | UAT-FLOW-04 | ✅ | resource-flow.spec.ts |
+| 角色视角差异 | 可编辑 vs 只读 | UAT-FLOW-05 | ✅ | resource-flow.spec.ts |
 
 ### 3.4 用户旅程
 
 | 剧本 | 用户 | 旅程 | 用例 | 状态 |
 |---|---|---|---|---|
-| A 全流程 | admin | 登录→驾驶舱→门店→告警→工单→系统 | UAT-JOURNEY-01 | ✅ |
-| B 安全员 | security | 登录→告警处理→派单→名单申报 | UAT-JOURNEY-02 | ✅ |
-| C 区域 | region | 登录→驾驶舱(范围)→门店(范围)→告警(范围) | UAT-JOURNEY-03 | ✅ |
-| D 店长 | mgr | 登录→告警(本店)→工单(只读)→名单申报 | UAT-JOURNEY-04 | ✅ |
+| A 管理员全流程 | admin | 登录→工作台→资源管理→创建资源→系统设置 | UAT-JOURNEY-01 | ✅ |
+| B 编辑→审核 | editor | 登录→工作台→创建资源→提交审核 | UAT-JOURNEY-02 | ✅ |
+| C 审核者审批 | reviewer | 登录→工作台→待审核列表→审批通过/驳回 | UAT-JOURNEY-03 | ✅ |
+| D 普通用户 | user | 登录→工作台→查看资源→个人中心 | UAT-JOURNEY-04 | ✅ |
 
 ## 4. 四原则落地清单
 
 | 角色/模块 | 零噪音用例 | 深链接入口 | 数据范围断言 | 幂等造数 |
 |---|---|---|---|---|
-| 督导 | UAT-RBAC-SUP-07 落地页零403 | UAT-RBAC-SUP-08 巡店报告抽屉 | UAT-RBAC-SUP-02 华东范围 | ensureWorkOrder/ensureWatchlist |
-| 店长 | UAT-RBAC-MGR-05 落地页零403 | UAT-RBAC-MGR-06 工单详情只读 | UAT-RBAC-MGR-02 本店SELF | ensureWorkOrder |
-| 区域 | UAT-RBAC-REG-xx | 订单详情 | 本区可见/异区不可见 | ensureOrder |
+| 编辑者 | UAT-RBAC-EDITOR-07 落地页零403 | UAT-RBAC-EDITOR-08 资源编辑抽屉 | UAT-RBAC-EDITOR-02 本组织范围 | ensureResource |
+| 普通用户 | UAT-RBAC-USER-05 落地页零403 | UAT-RBAC-USER-06 资源详情只读 | UAT-RBAC-USER-02 本人SELF | ensureResource |
+| 审核者 | UAT-RBAC-REVIEWER-xx | 审核详情页 | 本部门可见/异部门不可见 | ensureResource |
 | ... | | | | |
 
 ## 5. 不测范围（明确排除）

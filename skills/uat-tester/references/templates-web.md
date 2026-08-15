@@ -52,7 +52,7 @@ export default defineConfig({
 
 ```
 e2e/
-├── global-setup.ts          # 幂等预置租户/组织/门店/角色 → storageState
+├── global-setup.ts          # 幂等预置租户/组织/部门/角色 → storageState
 ├── fixtures/
 │   ├── env.ts               # 环境变量 + 角色账号常量
 │   ├── api.ts               # api()/loginApi() 调用助手
@@ -82,10 +82,10 @@ export const env = {
 
 export const USERS = {
   admin: 'uat.admin',
-  ops: 'uat.ops',
-  region: 'uat.region',
-  supervisor: 'uat.supervisor',
-  storeMgr: 'uat.mgr',
+  manager: 'uat.manager',
+  editor: 'uat.editor',
+  reviewer: 'uat.reviewer',
+  user: 'uat.user',
   disabled: 'uat.disabled'
 } as const
 export type RoleKey = keyof typeof USERS
@@ -185,30 +185,30 @@ function asList(data: unknown): Record<string, unknown>[] {
   return []
 }
 
-/** 订单工厂：存在即复用，不存在才建；新建时间戳命名隔离 */
-export async function ensureOrder(token: string, spec: {
+/** 资源工厂：存在即复用，不存在才建；新建时间戳命名隔离 */
+export async function ensureResource(token: string, spec: {
   title: string
-  storeId: number
+  deptId: number
   type?: string
   priority?: string
   status?: string
 }): Promise<{ id: number }> {
-  const list = asList(await api('POST', '/api/orders/list', token, { page: 1, pageSize: 50 }))
+  const list = asList(await api('POST', '/api/resources/list', token, { page: 1, pageSize: 50 }))
   const existing = list.find((o) => o.title === spec.title)
   if (existing) {
     if (spec.status && existing.status !== spec.status) {
-      await api('PATCH', `/api/orders/${existing.id}/status`, token, { status: spec.status })
+      await api('PATCH', `/api/resources/${existing.id}/status`, token, { status: spec.status })
     }
     return { id: Number(existing.id) }
   }
-  const created = await api('POST', '/api/orders', token, {
+  const created = await api('POST', '/api/resources', token, {
     type: spec.type || 'default',
-    storeId: spec.storeId,
+    deptId: spec.deptId,
     title: spec.title,                   // 调用方用 `UAT-xxx-${Date.now()}` 命名
     priority: spec.priority || 'medium'
   })
   if (spec.status && spec.status !== 'pending') {
-    await api('PATCH', `/api/orders/${created.id}/status`, token, { status: spec.status })
+    await api('PATCH', `/api/resources/${created.id}/status`, token, { status: spec.status })
   }
   return { id: Number(created.id) }
 }
@@ -282,79 +282,79 @@ import { test, expect } from '@playwright/test'
 import { authFile, readWorld } from '../fixtures/auth'
 import { USERS, env } from '../fixtures/env'
 import { loginApi } from '../fixtures/api'
-import { ensureOrder } from '../fixtures/provision'
+import { ensureResource } from '../fixtures/provision'
 
-test.describe('督导角色权限专项', () => {
-  test.use({ storageState: authFile('supervisor') })
+test.describe('审核者角色权限专项', () => {
+  test.use({ storageState: authFile('reviewer') })
 
   test('菜单可见性按矩阵', async ({ page }) => {
     await page.goto('/dashboard')
-    await expect(page.getByTestId('nav-ops')).toBeVisible()
-    await expect(page.getByTestId('nav-store')).toHaveCount(0)
-    await expect(page.getByTestId('nav-system')).toHaveCount(0)
+    await expect(page.getByTestId('nav-resources')).toBeVisible()
+    await expect(page.getByTestId('nav-dept')).toHaveCount(0)
+    await expect(page.getByTestId('nav-settings')).toHaveCount(0)
   })
 
   // §4.1 首屏零噪音
-  test('落地页零噪音：筛选器基础数据对督导可用', async ({ page }) => {
+  test('落地页零噪音：筛选器基础数据对审核者可用', async ({ page }) => {
     const forbidden: string[] = []
     page.on('response', (res) => { if (res.status() >= 400) forbidden.push(`${res.status()} ${res.url()}`) })
-    const optionsResp = page.waitForResponse((r) => r.url().includes('/api/store/options'))
+    const optionsResp = page.waitForResponse((r) => r.url().includes('/api/dept/options'))
     await page.goto('/dashboard')
-    await expect(page.getByTestId('nav-workbench')).toBeVisible()
+    await expect(page.getByTestId('nav-dashboard')).toBeVisible()
     const resp = await optionsResp
     expect(resp.status()).toBe(200)
     expect(forbidden).toEqual([])
     await expect(page.locator('.ant-message', { hasText: /无权限|Request failed|Internal Server/ })).toHaveCount(0)
     // 接口层兜底：角色 token 直调 = 200
-    const { token } = await loginApi(USERS.supervisor, env.testPass)
-    const apiRes = await fetch(`${env.bffURL}/api/store/options`, { headers: { Authorization: `Bearer ${token}` } })
+    const { token } = await loginApi(USERS.reviewer, env.testPass)
+    const apiRes = await fetch(`${env.bffURL}/api/dept/options`, { headers: { Authorization: `Bearer ${token}` } })
     expect(apiRes.status).toBe(200)
   })
 
   // §4.2 深链接抽屉覆盖
-  test('订单详情抽屉：依赖接口零 403', async ({ page }) => {
+  test('资源详情抽屉：依赖接口零 403', async ({ page }) => {
     const world = readWorld()
     const forbidden: string[] = []
     page.on('response', (res) => { if (res.status() >= 400) forbidden.push(`${res.status()} ${res.url()}`) })
-    const { token } = await loginApi(USERS.ops, env.testPass)   // 造数用有写权限的角色
-    const title = `UAT-督导详情-${Date.now()}`
-    const { id } = await ensureOrder(token, { title, storeId: world.storeId, status: 'pending' })
+    const { token } = await loginApi(USERS.admin, env.testPass)   // 造数用有写权限的角色
+    const title = `UAT-审核者详情-${Date.now()}`
+    const { id } = await ensureResource(token, { title, deptId: world.deptId, status: 'pending' })
 
-    await page.goto(`/orders/${id}`)
+    await page.goto(`/resources/${id}`)
     await expect(page.getByText(title)).toBeVisible()
     expect(forbidden).toEqual([])
     await expect(page.locator('.ant-message', { hasText: /无权限|Request failed/ })).toHaveCount(0)
   })
 
   // §4.3 数据范围
-  test('数据范围：仅可见所属组织数据', async ({ page }) => {
+  test('数据范围：仅可见所属部门数据', async ({ page }) => {
     const world = readWorld()
-    const { token } = await loginApi(USERS.ops, env.testPass)
-    const myTitle = `UAT-范围-本组-${Date.now()}`
-    const otherTitle = `UAT-范围-异组-${Date.now()}`
-    await ensureOrder(token, { title: myTitle, storeId: world.storeId })
-    await ensureOrder(token, { title: otherTitle, storeId: world.otherStoreId })
+    const { token } = await loginApi(USERS.admin, env.testPass)
+    const myTitle = `UAT-范围-本部门-${Date.now()}`
+    const otherTitle = `UAT-范围-异部门-${Date.now()}`
+    await ensureResource(token, { title: myTitle, deptId: world.deptId })
+    await ensureResource(token, { title: otherTitle, deptId: world.otherDeptId })
 
-    await page.goto('/orders')
+    await page.goto('/resources')
     await expect(page.getByText(myTitle)).toBeVisible({ timeout: 15_000 })
-    await expect(page.getByText(otherTitle)).toHaveCount(0)   // 异组不可见
+    await expect(page.getByText(otherTitle)).toHaveCount(0)   // 异部门不可见
   })
 
   // §4.4 403 双轨
   test('无写权限接口 = 403（UI 无按钮 + API 直调 403）', async ({ page }) => {
-    await page.goto('/orders')
-    await expect(page.getByTestId('order-delete-button')).toHaveCount(0)   // UI 无删除按钮
-    const { token } = await loginApi(USERS.supervisor, env.testPass)
-    const res = await fetch(`${env.bffURL}/api/orders/1/delete`, {
+    await page.goto('/resources')
+    await expect(page.getByTestId('resource-delete-button')).toHaveCount(0)   // UI 无删除按钮
+    const { token } = await loginApi(USERS.reviewer, env.testPass)
+    const res = await fetch(`${env.bffURL}/api/resources/1/delete`, {
       method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
     })
     expect(res.status).toBe(403)
   })
 
-  test('无权直达 /system 被守卫拦截', async ({ page }) => {
-    await page.goto('/system/users')
-    await expect(page).not.toHaveURL(/\/system\//)
-    await expect(page.getByTestId('nav-workbench')).toBeVisible()
+  test('无权直达 /settings 被守卫拦截', async ({ page }) => {
+    await page.goto('/settings/users')
+    await expect(page).not.toHaveURL(/\/settings\//)
+    await expect(page.getByTestId('nav-dashboard')).toBeVisible()
   })
 })
 ```
@@ -365,41 +365,41 @@ test.describe('督导角色权限专项', () => {
 import { test, expect } from '@playwright/test'
 import { authFile, readWorld } from '../fixtures/auth'
 import { USERS, env } from '../fixtures/env'
-import { loginApi, ensureOrder } from '../fixtures/provision'
+import { loginApi, ensureResource } from '../fixtures/provision'
 
 const world = readWorld()
 
-test.describe('订单流转', () => {
+test.describe('资源流转', () => {
   test('创建→处理→待验收→关闭', async ({ page }) => {
-    test.use({ storageState: authFile('supervisor') })
-    const ops = await loginApi(USERS.ops, env.testPass)
+    test.use({ storageState: authFile('reviewer') })
+    const admin = await loginApi(USERS.admin, env.testPass)
     const title = `UAT-流转-${Date.now()}`
-    const { id } = await ensureOrder(ops.token, {
-      title, storeId: world.storeId, status: 'waiting_verify'   // 工厂直接预置状态
+    const { id } = await ensureResource(admin.token, {
+      title, deptId: world.deptId, status: 'waiting_verify'   // 工厂直接预置状态
     })
-    await page.goto(`/orders/${id}`)
-    await expect(page.getByTestId('order-verify-pass')).toBeVisible()
-    await page.getByTestId('order-verify-pass').click()
+    await page.goto(`/resources/${id}`)
+    await expect(page.getByTestId('resource-approve')).toBeVisible()
+    await page.getByTestId('resource-approve').click()
     await expect(page.locator('.ant-message')).toContainText(/成功|已验收/)
     await expect(page.getByText('已关闭').first()).toBeVisible({ timeout: 10_000 })
   })
 
-  test('角色视角差异：督导可验收，店长只读', async ({ browser }) => {
-    const ops = await loginApi(USERS.ops, env.testPass)
+  test('角色视角差异：审核者可审批，普通用户只读', async ({ browser }) => {
+    const admin = await loginApi(USERS.admin, env.testPass)
     const title = `UAT-视角-${Date.now()}`
-    const { id } = await ensureOrder(ops.token, { title, storeId: world.storeId, status: 'waiting_verify' })
+    const { id } = await ensureResource(admin.token, { title, deptId: world.deptId, status: 'waiting_verify' })
 
-    const supCtx = await browser.newContext({ storageState: authFile('supervisor') })
-    const supPage = await supCtx.newPage()
-    await supPage.goto(`/orders/${id}`)
-    await expect(supPage.getByTestId('order-verify-pass')).toBeVisible()
-    await supCtx.close()
+    const reviewerCtx = await browser.newContext({ storageState: authFile('reviewer') })
+    const reviewerPage = await reviewerCtx.newPage()
+    await reviewerPage.goto(`/resources/${id}`)
+    await expect(reviewerPage.getByTestId('resource-approve')).toBeVisible()
+    await reviewerCtx.close()
 
-    const mgrCtx = await browser.newContext({ storageState: authFile('storeMgr') })
-    const mgrPage = await mgrCtx.newPage()
-    await mgrPage.goto(`/orders/${id}`)
-    await expect(mgrPage.getByTestId('order-verify-pass')).toHaveCount(0)
-    await mgrCtx.close()
+    const userCtx = await browser.newContext({ storageState: authFile('user') })
+    const userPage = await userCtx.newPage()
+    await userPage.goto(`/resources/${id}`)
+    await expect(userPage.getByTestId('resource-approve')).toHaveCount(0)
+    await userCtx.close()
   })
 })
 ```
