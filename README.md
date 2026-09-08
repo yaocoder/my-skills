@@ -9,6 +9,7 @@ AionUI / OpenCode / Cursor / Claude Code / Codex 等 Agent 平台的自定义技
 | [production-readiness-audit](./skills/production-readiness-audit/) | 企业级工程成熟度与生产就绪审计。自主取证、Evidence First、Vibe Engineering 专项、GO/NO-GO 门禁；支持 `/audit-quick`（默认）、`/audit`、`/audit-security`、`/audit-vibe` 等模式 |
 | [ppt-content-designer](./skills/ppt-content-designer/) | PPT 内容策划与设计规范生成器。将原始需求/文档转化为逐页内容大纲 + 视觉设计指引 |
 | [uat-tester](./skills/uat-tester/) | 通用用户验收（UAT）测试体系执行器，框架无关、项目无关。先文档化角色矩阵与追溯矩阵，再落地自动化脚本（Playwright/WebdriverIO/Appium/Detox）。内建四条防回归原则：首屏零噪音、深链接抽屉覆盖、数据范围按角色隔离、幂等造数与隔离 |
+| [project-docs-wiki](/yaocoder/my-skills/blob/main/skills/project-docs-wiki) | 把仓库工程 Markdown 做成 Docs-as-Code 资料库（VitePress）：文档治理 → 策展侧栏 → 一键本地预览 → CI 构建；避免 GitHub Wiki/Notion 双真相源 |
 
 ## 安装
 
@@ -141,6 +142,19 @@ description: >
 | `/audit-vibe` | Vibe Coding / AI 工程债务专项 |
 
 审计默认 **只读**，不写业务代码；允许在 `.audit/` 下生成报告。
+
+
+## project-docs-wiki 快速用法
+
+在目标仓库对 Agent 说：
+
+| 说法 | 行为 |
+|------|------|
+| 「做资料库 / wiki / 知识库」 | 按技能：盘点 → 治理 → VitePress → `start-wiki.sh` → CI |
+| 「整理 docs/」 | 先治理再挂站，不跳过归档/断链修复 |
+| `/project-docs-wiki` | 显式触发本技能 |
+
+默认：VitePress 挂现有 `docs/`；站点只渲染，不另起正文真相源。
 
 ## 相关资源
 

@@ -1,0 +1,23 @@
+{
+  "skill_name": "project-docs-wiki",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "这个仓库 docs 很乱，请做成可以检索的 wiki 资料库，本地能一键打开。不要用 GitHub Wiki。",
+      "expected_output": "先盘点并清理/归档/合并短记，再写维护规范；VitePress 挂在现有 docs/；精选侧栏；start-wiki.sh 默认非 5173；CI docs:build。不把过程日志全文塞进主导航。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "帮我把工程文档站点搭起来，已经有 docs/README 分层了，直接做预览和 CI。",
+      "expected_output": "跳过无必要的大删；补 VitePress config、index.md、package scripts、gitignore、CI job、启动脚本；缺目录 README 则补。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "文档更新以后 wiki 怎么跟？先别改代码，告诉我规范。",
+      "expected_output": "强调 git Markdown 为真相源；改正式页+README+必要时 sidebar；过时进 _archive；禁止 Notion/Wiki 后台双写。可落盘维护规范而不必立刻改 VitePress。",
+      "files": []
+    }
+  ]
+}
