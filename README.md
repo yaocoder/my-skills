@@ -6,6 +6,7 @@ AionUI / OpenCode / Cursor / Claude Code / Codex 等 Agent 平台的自定义技
 
 | 技能 | 描述 |
 |------|------|
+| [general-engineering](./skills/general-engineering/) | 领域中立的软件工程承载面：新仓 bootstrap、已有仓 harden、对照价值流出缺口。含目录骨架、文档 taxonomy/索引、ADR、本地 start/stop、env 分层、CI guard、ops/deploy 契约、AGENTS.md 与审计槽位。正式 GO/NO-GO 仍走 `production-readiness-audit` |
 | [production-readiness-audit](./skills/production-readiness-audit/) | 企业级工程成熟度与生产就绪审计。自主取证、Evidence First、Vibe Engineering 专项、GO/NO-GO 门禁；支持 `/audit-quick`（默认）、`/audit`、`/audit-security`、`/audit-vibe` 等模式 |
 | [ppt-content-designer](./skills/ppt-content-designer/) | PPT 内容策划与设计规范生成器。将原始需求/文档转化为逐页内容大纲 + 视觉设计指引 |
 | [uat-tester](./skills/uat-tester/) | 通用用户验收（UAT）测试体系执行器，框架无关、项目无关。先文档化角色矩阵与追溯矩阵，再落地自动化脚本（Playwright/WebdriverIO/Appium/Detox）。内建四条防回归原则：首屏零噪音、深链接抽屉覆盖、数据范围按角色隔离、幂等造数与隔离 |
@@ -128,6 +129,19 @@ description: >
   技能描述，说明何时触发该技能
 ---
 ```
+
+## general-engineering 快速用法
+
+在目标仓库对 Agent 说：
+
+| 说法 | 行为 |
+|------|------|
+| 「按软件工程体系建项目」 | bootstrap：中立骨架 + 文档索引 + ADR + 本地 DX + CI/deploy 槽位 |
+| 「这个仓太乱，帮我工程化一下」 | harden：补缺口，拆穿虚假成熟度，不推翻能跑的布局 |
+| 「对照需求-开发-测试-验收-发布-运营出缺口」 | align-audit：只出清单，默认不改代码 |
+| `/general-engineering` | 显式触发本技能 |
+
+不绑业务域。正式上线裁决请用 `production-readiness-audit`。
 
 ## production-readiness-audit 快速用法
 

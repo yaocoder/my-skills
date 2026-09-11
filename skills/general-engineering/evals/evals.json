@@ -1,0 +1,55 @@
+{
+  "skill_name": "general-engineering",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "在 /tmp/ge-eval-newapp 建一个新的软件项目骨架。技术栈还没定，不要写业务功能。请按软件工程体系把工程底座搭起来：目录、文档分类和索引、ADR、本地启动约定、环境变量示例、CI 占位、部署契约槽位、AGENTS.md。不要搞微服务空壳，也不要写看板/价值评审流程文档。",
+      "expected_output": "bootstrap 模式。中立骨架（偏模块化单体或单包，空服务标 planned 或根本不建空 services）。含 docs 索引、ADR 模板或 ADR-0001、.env.example、AGENTS.md、gitignore、deploy/ops 槽位、.audit README。收尾报告含模式/成熟度/刻意不做。无行业业务模块、无价值评审 SOP。",
+      "files": [],
+      "expectations": [
+        "Declares bootstrap mode and a maturity target of L0 or L1 in the closing report or transcript",
+        "Creates a docs taxonomy plus a single docs index (文档索引.md or docs/README.md) that lists categories",
+        "Adds an ADR template and/or ADR-0001 that prefers modular monolith or a single app, not a fleet of empty microservices",
+        "Adds .env.example and a .gitignore that ignores real .env / secrets / .run / log",
+        "Adds AGENTS.md with how to run locally and hard constraints",
+        "Adds deploy/ and ops/ slots (may be planned stubs) without claiming production release is ready",
+        "Does not create kanban, value-review ceremony, or org-process SOP documents",
+        "Does not invent a business-domain product module (no retail/vision/agent-platform naming as top-level business apps)",
+        "Empty service or infra directories are marked status planned, or are not created at all",
+        "Closing report lists files created and an explicit 刻意不做 / will-not-do section"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "这个已有仓库只有 frontend/、一个 README 和源码，没有 CI、没有 docs 索引、根目录扔着真实 .env。请整顿工程体系，不要重写业务页面。把缺口补到可交付的下一档，并指出哪些是虚假成熟度。",
+      "expected_output": "harden 模式。不推翻 frontend 布局去改成空 apps/services。补文档 taxonomy+索引、gitignore 密钥、.env.example、AGENTS.md、CI 最小接线或明确缺口、DoD。指出若存在空 tests/ 或文档承诺未接线等问题。不删除业务源码。",
+      "files": [],
+      "expectations": [
+        "Keeps existing frontend/src business files (App.tsx still present, not replaced by an empty apps/services rewrite)",
+        "Adds .gitignore (or equivalent) so .env is not supposed to be committed",
+        "Adds .env.example without copying live secret values from .env",
+        "Adds a docs index and taxonomy folders or links",
+        "Adds AGENTS.md",
+        "Adds a minimal CI workflow or documents CI as an explicit gap instead of claiming it exists",
+        "Calls out false maturity: README/docs claim full CI/lint/E2E but no workflow exists; empty tests/ directory",
+        "Does not delete frontend/src/App.tsx",
+        "Does not invent a full empty microservices tree as the harden approach"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "对照需求-开发-测试-验收-发布-运营，评估当前仓库的工程承载面缺口。先不要改代码。我之后可能再请你按清单改。",
+      "expected_output": "align-audit 模式。产出按价值流阶段的缺口表（有/无/虚假+证据路径）。不修改业务代码、不生成正式 GO/NO-GO 评分报告；可建议随后调用 production-readiness-audit。",
+      "files": [],
+      "expectations": [
+        "Produces a gap list mapped to value-stream stages (需求/开发/测试/验收/发布/运营 or equivalent)",
+        "Marks items as present / missing / false-maturity with evidence paths where possible",
+        "Identifies at least one false-maturity item (docs claim CI, empty tests, committed .env, or similar)",
+        "Does not modify frontend/src/App.tsx or frontend/src/main.tsx",
+        "Does not write a scored GO/NO-GO production-readiness audit as if it were production-readiness-audit",
+        "May write a gap document; if so it is clearly a gap list not a product spec",
+        "Suggests a follow-up (harden this skill, or production-readiness-audit) rather than silently rewriting the repo"
+      ]
+    }
+  ]
+}
