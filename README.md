@@ -23,18 +23,56 @@
 | 列出本仓库全部技能 | `npx skills add yaocoder/my-skills -l` |
 | 交互安装（选技能 + 选客户端） | `npx skills add yaocoder/my-skills` |
 | 全局安装全部技能到全部已检测客户端 | `npx skills add yaocoder/my-skills -g --all` |
-| 全局只装一个技能到 Cursor | `npx skills add yaocoder/my-skills -g -a cursor -s production-readiness-audit -y` |
+| **全局只装一个技能** | `npx skills add yaocoder/my-skills -g -s <技能名> -y` |
+| 全局只装一个技能到指定客户端 | `npx skills add yaocoder/my-skills -g -a cursor -s <技能名> -y` |
+| 全局一次装多个指定技能 | `npx skills add yaocoder/my-skills -g -s production-readiness-audit -s uat-tester -y` |
 | 全局装到多客户端 | `npx skills add yaocoder/my-skills -g -a cursor -a claude-code -a codex -y` |
-| 项目级安装（在目标仓库根目录执行） | `npx skills add yaocoder/my-skills -s uat-tester -y` |
-| 查看已安装技能 | `npx skills list -g` |
-| 更新已安装技能 | `npx skills update -g -y` |
-| 卸载某个技能 | `npx skills remove -g -s production-readiness-audit -y` |
+| 项目级只装一个技能（在目标仓库根目录） | `npx skills add yaocoder/my-skills -s <技能名> -y` |
+| 项目级安装全部技能 | `npx skills add yaocoder/my-skills --skill '*' -y` |
+| 查看已安装（全局） | `npx skills list -g` |
+| 查看已安装（当前项目） | `npx skills list` |
+| 更新已安装（全局） | `npx skills update -g -y` |
+| 更新已安装（当前项目） | `npx skills update -y` |
+| 卸载某个技能（全局） | `npx skills remove -g -s <技能名> -y` |
+| 复制安装（不用 symlink） | `npx skills add yaocoder/my-skills -g -s <技能名> --copy -y` |
+
+### 只安装单个技能
+
+把 `<技能名>` 换成下表之一即可：
+
+| `-s` 技能名 | 说明 |
+|-------------|------|
+| `general-engineering` | 工程承载面 bootstrap / harden |
+| `production-readiness-audit` | 生产就绪 / 工程成熟度审计 |
+| `ppt-content-designer` | PPT 内容与视觉策划 |
+| `uat-tester` | UAT 验收测试体系 |
+| `project-docs-wiki` | Docs-as-Code 资料库 |
+
+```bash
+# 全局：只装审计技能（不指定客户端 = 装到本机已检测到的客户端）
+npx skills add yaocoder/my-skills -g -s production-readiness-audit -y
+
+# 全局：只装到 Cursor
+npx skills add yaocoder/my-skills -g -a cursor -s production-readiness-audit -y
+
+# 全局：其它技能同理
+npx skills add yaocoder/my-skills -g -s general-engineering -y
+npx skills add yaocoder/my-skills -g -s ppt-content-designer -y
+npx skills add yaocoder/my-skills -g -s uat-tester -y
+npx skills add yaocoder/my-skills -g -s project-docs-wiki -y
+
+# 项目级：只装 UAT（先 cd 到目标仓库根目录）
+npx skills add yaocoder/my-skills -s uat-tester -y
+```
 
 ### 按客户端示例
 
 ```bash
-# Cursor（全局）
+# Cursor（全局，全部技能）
 npx skills add yaocoder/my-skills -g -a cursor -y
+
+# Cursor（全局，单个技能）
+npx skills add yaocoder/my-skills -g -a cursor -s production-readiness-audit -y
 
 # Claude Code（全局）
 npx skills add yaocoder/my-skills -g -a claude-code -y
