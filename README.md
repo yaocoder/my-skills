@@ -1,6 +1,6 @@
 # my-skills
 
-AionUI / OpenCode / Cursor / Claude Code / Codex 等 Agent 平台的自定义技能仓库。
+跨 Agent 客户端的自定义技能仓库。基于 [Agent Skills](https://github.com/vercel-labs/skills) 开放标准，可用 `npx skills` 一键安装到 Cursor、Claude Code、Codex、Gemini CLI、OpenCode、CodeBuddy、Trae、Qoder 等 40+ 客户端。
 
 ## 技能列表
 
@@ -10,98 +10,62 @@ AionUI / OpenCode / Cursor / Claude Code / Codex 等 Agent 平台的自定义技
 | [production-readiness-audit](./skills/production-readiness-audit/) | 企业级工程成熟度与生产就绪审计。自主取证、Evidence First、Vibe Engineering 专项、GO/NO-GO 门禁；支持 `/audit-quick`（默认）、`/audit`、`/audit-security`、`/audit-vibe` 等模式 |
 | [ppt-content-designer](./skills/ppt-content-designer/) | PPT 内容策划与设计规范生成器。将原始需求/文档转化为逐页内容大纲 + 视觉设计指引 |
 | [uat-tester](./skills/uat-tester/) | 通用用户验收（UAT）测试体系执行器，框架无关、项目无关。先文档化角色矩阵与追溯矩阵，再落地自动化脚本（Playwright/WebdriverIO/Appium/Detox）。内建四条防回归原则：首屏零噪音、深链接抽屉覆盖、数据范围按角色隔离、幂等造数与隔离 |
-| [project-docs-wiki](/yaocoder/my-skills/blob/main/skills/project-docs-wiki) | 把仓库工程 Markdown 做成 Docs-as-Code 资料库（VitePress）：文档治理 → 策展侧栏 → 一键本地预览 → CI 构建；避免 GitHub Wiki/Notion 双真相源 |
+| [project-docs-wiki](./skills/project-docs-wiki/) | 把仓库工程 Markdown 做成 Docs-as-Code 资料库（VitePress）：文档治理 → 策展侧栏 → 一键本地预览 → CI 构建；避免 GitHub Wiki/Notion 双真相源 |
 
-## 安装
+## 安装（推荐：npx skills）
 
-### AionUI / OpenCode
+前置：已安装 Node.js（含 `npx`）。安装器会把技能放到各客户端对应目录，**新开会话**后生效。
 
-#### 安装单个技能
+### 常用命令
 
-```bash
-git clone --depth 1 https://github.com/yaocoder/my-skills.git /tmp/my-skills
-"$AIONUI_HELPER_BIN" config skills import <<'JSON'
-{"skill_path": "/tmp/my-skills/skills/production-readiness-audit"}
-JSON
-```
+| 目的 | 命令 |
+|------|------|
+| 列出本仓库全部技能 | `npx skills add yaocoder/my-skills -l` |
+| 交互安装（选技能 + 选客户端） | `npx skills add yaocoder/my-skills` |
+| 全局安装全部技能到全部已检测客户端 | `npx skills add yaocoder/my-skills -g --all` |
+| 全局只装一个技能到 Cursor | `npx skills add yaocoder/my-skills -g -a cursor -s production-readiness-audit -y` |
+| 全局装到多客户端 | `npx skills add yaocoder/my-skills -g -a cursor -a claude-code -a codex -y` |
+| 项目级安装（在目标仓库根目录执行） | `npx skills add yaocoder/my-skills -s uat-tester -y` |
+| 查看已安装技能 | `npx skills list -g` |
+| 更新已安装技能 | `npx skills update -g -y` |
+| 卸载某个技能 | `npx skills remove -g -s production-readiness-audit -y` |
 
-#### 安装全部技能
-
-```bash
-git clone --depth 1 https://github.com/yaocoder/my-skills.git /tmp/my-skills
-"$AIONUI_HELPER_BIN" config skills import <<'JSON'
-{"skill_path": "/tmp/my-skills/skills"}
-JSON
-```
-
-安装后记得将技能绑定到对应助手：
+### 按客户端示例
 
 ```bash
-# 查看当前助手名称
-"$AIONUI_HELPER_BIN" config assistants list
+# Cursor（全局）
+npx skills add yaocoder/my-skills -g -a cursor -y
 
-# 绑定技能（替换 <助手ID> 为实际 ID）
-"$AIONUI_HELPER_BIN" config assistants update <<'JSON'
-{
-  "assistant_id": "<助手ID>",
-  "enabled_skills": ["production-readiness-audit"]
-}
-JSON
+# Claude Code（全局）
+npx skills add yaocoder/my-skills -g -a claude-code -y
+
+# Codex（全局）
+npx skills add yaocoder/my-skills -g -a codex -y
+
+# Gemini CLI / OpenCode / CodeBuddy / Trae / Qoder
+npx skills add yaocoder/my-skills -g -a gemini-cli -y
+npx skills add yaocoder/my-skills -g -a opencode -y
+npx skills add yaocoder/my-skills -g -a codebuddy -y
+npx skills add yaocoder/my-skills -g -a trae -y
+npx skills add yaocoder/my-skills -g -a qoder -y
 ```
 
-> ⚠️ 技能绑定后仅对新会话生效，当前正在进行的会话不会自动加载。
+> `-a` 取值以 `npx skills` 当前支持列表为准；不确定时用交互安装，或 `-g --all` 装到本机已检测到的全部客户端。
 
-### Cursor
+### 范围说明
 
-```bash
-git clone --depth 1 https://github.com/yaocoder/my-skills.git /tmp/my-skills
+| 范围 | 何时用 | 效果 |
+|------|--------|------|
+| **全局**（`-g`） | 个人常用技能 | 写入用户目录（如 `~/.cursor/skills/`、`~/.claude/skills/`），所有项目可用 |
+| **项目级**（不加 `-g`） | 团队共享、仓库内约定 | 写入当前仓库（如 `.agents/skills/`），随仓库分发 |
 
-# 全局（所有项目可用）
-mkdir -p ~/.cursor/skills
-cp -r /tmp/my-skills/skills/production-readiness-audit ~/.cursor/skills/
-
-# 或项目级（仅当前仓库）
-mkdir -p .cursor/skills
-cp -r /tmp/my-skills/skills/production-readiness-audit .cursor/skills/
-```
-
-新开 Chat 或重载窗口后，在目标项目中说 `/audit-quick` 或「评估工程成熟度」即可触发。
-
-### Claude Code
-
-```bash
-git clone --depth 1 https://github.com/yaocoder/my-skills.git /tmp/my-skills
-mkdir -p ~/.claude/skills
-cp -r /tmp/my-skills/skills/production-readiness-audit ~/.claude/skills/
-```
-
-### Codex
-
-```bash
-git clone --depth 1 https://github.com/yaocoder/my-skills.git /tmp/my-skills
-mkdir -p ~/.agents/skills
-cp -r /tmp/my-skills/skills/production-readiness-audit ~/.agents/skills/
-```
-
-## 更新
-
-```bash
-cd /tmp/my-skills && git pull
-
-# AionUI：重新导入（会覆盖更新）
-"$AIONUI_HELPER_BIN" config skills import <<'JSON'
-{"skill_path": "/tmp/my-skills/skills/production-readiness-audit"}
-JSON
-
-# Cursor / Claude Code / Codex：重新复制对应目录
-cp -r /tmp/my-skills/skills/production-readiness-audit ~/.cursor/skills/
-```
+安装后请 **新开 Chat / 新开 session**；已有会话不会自动加载新技能。
 
 ## 添加新技能
 
 1. 在 `skills/` 下创建子目录：`mkdir -p skills/<技能名>`
 2. 放入 `SKILL.md`（必需）；复杂技能可加 `references/`、`scripts/` 等 bundled resources
-3. 更新本 README 的技能列表与安装说明
+3. 更新本 README 的技能列表与快速用法
 4. 提交推送：
 
 ```bash
@@ -110,17 +74,25 @@ git commit -m "feat: add <技能名> skill"
 git push
 ```
 
+本地验证能否被 CLI 发现：
+
+```bash
+npx skills add ./ -l
+# 或
+npx skills add yaocoder/my-skills -l
+```
+
 ## 技能结构要求
 
 ```
 skills/
 └── <技能名>/
     ├── SKILL.md              # 技能定义（YAML frontmatter + Markdown，必需）
-    └── references/           # 可选：按需加载的参考文档
-        └── *.md
+    ├── references/           # 可选：按需加载的参考文档
+    └── scripts/              # 可选：可执行辅助脚本
 ```
 
-`SKILL.md` 需包含 YAML frontmatter，定义技能名称和描述：
+`SKILL.md` 需包含 YAML frontmatter：
 
 ```yaml
 ---
@@ -129,6 +101,8 @@ description: >
   技能描述，说明何时触发该技能
 ---
 ```
+
+目录布局兼容 `npx skills` 的发现规则：`skills/<name>/SKILL.md`。
 
 ## general-engineering 快速用法
 
@@ -157,7 +131,6 @@ description: >
 
 审计默认 **只读**，不写业务代码；允许在 `.audit/` 下生成报告。
 
-
 ## project-docs-wiki 快速用法
 
 在目标仓库对 Agent 说：
@@ -172,5 +145,6 @@ description: >
 
 ## 相关资源
 
-- [AionUI](https://aionui.com)
-- [Cursor Skills 文档](https://docs.cursor.com)
+- [vercel-labs/skills](https://github.com/vercel-labs/skills) — `npx skills` 安装器与 Agent Skills 生态
+- [skills.sh](https://skills.sh) — 技能发现与浏览
+- [Cursor Skills 文档](https://cursor.com/docs/skills)
