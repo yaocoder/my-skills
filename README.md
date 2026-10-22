@@ -11,6 +11,7 @@
 | [ppt-content-designer](./skills/ppt-content-designer/) | PPT 内容策划与设计规范生成器。将原始需求/文档转化为逐页内容大纲 + 视觉设计指引 |
 | [uat-tester](./skills/uat-tester/) | 通用用户验收（UAT）测试体系执行器，框架无关、项目无关。先文档化角色矩阵与追溯矩阵，再落地自动化脚本（Playwright/WebdriverIO/Appium/Detox）。内建四条防回归原则：首屏零噪音、深链接抽屉覆盖、数据范围按角色隔离、幂等造数与隔离 |
 | [project-docs-wiki](./skills/project-docs-wiki/) | 把仓库工程 Markdown 做成 Docs-as-Code 资料库（VitePress）：文档治理 → 策展侧栏 → 一键本地预览 → CI 构建；避免 GitHub Wiki/Notion 双真相源 |
+| [pptx-pipeline](./skills/pptx-pipeline/) | 代码化 PPT 生成流水线（python-pptx）：零内置视觉规范的方法论——项目现场定设计系统、原生形状画流程/架构/飞轮图、强制渲染逐页目检；含中性工具库（东亚字体 XML、图片 cover 裁剪、渲染回看管线）与画法速查 |
 
 ## 安装（推荐：npx skills）
 
