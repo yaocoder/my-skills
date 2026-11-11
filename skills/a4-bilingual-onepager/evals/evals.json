@@ -1,0 +1,33 @@
+{
+  "skill_name": "a4-bilingual-onepager",
+  "evals": [
+    {
+      "id": 0,
+      "name": "onepager-from-scratch",
+      "prompt": "为「云智巡店 · 连锁门店智慧巡检 SaaS」制作中英双语 A4 竖版一页纸（完整提示词见历史 iteration-1）。",
+      "expected_output": "中英同源 A4 HTML + 构建脚本 + 两份 PNG 预览 + 两份单页 A4 PDF。",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "fix-clipped-layout",
+      "prompt": "修复 A4 一页纸 HTML 的两处版面 bug（文字被裁半行 + 页脚整块看不见），硬约束：不许删减文案、不许改 794×1123 尺寸（历史 iteration-1）。",
+      "expected_output": "修复稿：无裁切、页脚贴底、内容零删减、尺寸不变。",
+      "files": ["inputs/page.html"]
+    },
+    {
+      "id": 2,
+      "name": "fix-print-contrast",
+      "prompt": "一页纸导出 PDF 后浅灰小字发虚，全局整改文字对比度；硬约束：文案与结构零改动（历史 iteration-1）。",
+      "expected_output": "整改稿：无任何底色都发虚的文字色，文案结构零改动。",
+      "files": ["inputs/page.html"]
+    },
+    {
+      "id": 3,
+      "name": "ai-camera-two-sided",
+      "prompt": "请根据以下文档 <workspace>/iteration-2/eval-ai-camera-two-sided/inputs/AI摄像机快速定制明白纸.docx 制作\n请注意：\n1、只制作中文版，2 页即可，制作宣传品时会是正反面；\n2、第一页着重讲明事情，第二页介绍企业能力。\n\n（源自真实会话 ses_e36829257ffewUwQK1amfuZl9Z 的原始需求；iteration-2 用它检验优化后的技能——重点看设计四支柱：配色、排版组织、图示化、美观与占位图）",
+      "expected_output": "中文双面 2 页 A4：两页同源 HTML + 构建脚本 + 两页 PNG 预览 + 文案定稿方案文档；版面工程校验全过，且具设计感（视觉锚点≥3、有真图示、区块标题统一模子、字号阶梯≥5级、素材/占位规范）。",
+      "files": ["inputs/AI摄像机快速定制明白纸.docx"]
+    }
+  ]
+}

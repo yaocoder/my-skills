@@ -12,6 +12,7 @@
 | [uat-tester](./skills/uat-tester/) | 通用用户验收（UAT）测试体系执行器，框架无关、项目无关。先文档化角色矩阵与追溯矩阵，再落地自动化脚本（Playwright/WebdriverIO/Appium/Detox）。内建四条防回归原则：首屏零噪音、深链接抽屉覆盖、数据范围按角色隔离、幂等造数与隔离 |
 | [project-docs-wiki](./skills/project-docs-wiki/) | 把仓库工程 Markdown 做成 Docs-as-Code 资料库（VitePress）：文档治理 → 策展侧栏 → 一键本地预览 → CI 构建；避免 GitHub Wiki/Notion 双真相源 |
 | [pptx-pipeline](./skills/pptx-pipeline/) | 代码化 PPT 生成流水线（python-pptx）：零内置视觉规范的方法论——项目现场定设计系统、原生形状画流程/架构/飞轮图、强制渲染逐页目检；含中性工具库（东亚字体 XML、图片 cover 裁剪、渲染回看管线）与画法速查 |
+| [a4-bilingual-onepager](./skills/a4-bilingual-onepager/) | 中英双语 A4 一页纸（HTML + Chrome 无头打印）：文案定稿 → 双页镜像模板 → 视觉设计四支柱（配色骨架/排版层级/流程图·架构图图示化/美观细节+等尺寸占位图）→ 高度预算防裁字 → 打印对比度守则（PDF 发虚排查）→ 预览标注迭代；含测高/预览验收/对比度审计三脚本与 design-playbook 设计手册 |
 
 ## 安装（推荐：npx skills）
 

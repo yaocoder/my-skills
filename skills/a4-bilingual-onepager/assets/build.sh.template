@@ -1,0 +1,59 @@
+#!/bin/bash
+# 一页纸构建脚本模板：由 onepager.html 生成中英预览图（PNG）与 PDF（需 --pdf 显式开启）
+# 用法：
+#   ./build.sh            # 仅生成 PNG 预览（preview-zh.png / preview-en.png）——迭代用
+#   ./build.sh --pdf      # 额外导出两份 A4 单页 PDF——只在用户确认定稿后执行
+set -euo pipefail
+cd "$(dirname "$0")"
+
+# Chrome 路径：环境变量优先，其次 macOS 默认，最后 PATH 查找
+CHROME="${CHROME:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
+[[ -x "$CHROME" ]] || CHROME="$(command -v google-chrome || command -v chromium || true)"
+[[ -x "$CHROME" ]] || { echo "找不到 Chrome，设 CHROME=/path/to/chrome"; exit 1; }
+
+SRC="onepager.html"
+# A4 @96dpi = 794×1123；上下各留 24px 页边距 → 截图窗口高度 1171
+PAGE_W=794
+PAGE_H=1171
+
+# data-lang 占位替换，生成单语言临时页（一个模板出中英两页）
+gen() { # $1=zh|en
+  sed "s/__LANG__/$1/" "$SRC" > ".build-$1.html"
+}
+
+render_png() { # $1=zh|en $2=out.png
+  gen "$1"
+  "$CHROME" --headless=new --disable-gpu \
+    --window-size=${PAGE_W},${PAGE_H} --force-device-scale-factor=1 \
+    --screenshot="$2" \
+    --virtual-time-budget=3000 \
+    "file://$(pwd)/.build-$1.html" 2>/dev/null
+  echo "PNG  $2"
+}
+
+render_pdf() { # $1=zh|en $2=out.pdf
+  gen "$1"
+  "$CHROME" --headless=new --disable-gpu \
+    --print-to-pdf="$2" --no-pdf-header-footer \
+    --virtual-time-budget=3000 \
+    "file://$(pwd)/.build-$1.html" 2>/dev/null
+  echo "PDF  $2"
+}
+
+render_png zh preview-zh.png
+render_png en preview-en.png
+
+# 导出前硬校验（任一不过即失败，防止带着裁切/溢出出 PDF）
+python3 scripts/measure_layout.py "$SRC"
+python3 scripts/verify_preview.py preview-zh.png
+python3 scripts/verify_preview.py preview-en.png
+python3 scripts/audit_contrast.py "$SRC"
+
+if [[ "${1:-}" == "--pdf" ]]; then
+  render_pdf zh "../assets/xxx-ZH.pdf"
+  render_pdf en "../assets/xxx-EN.pdf"
+else
+  echo "(PDF 未导出——确认预览后加 --pdf 参数再生成)"
+fi
+
+rm -f .build-zh.html .build-en.html
