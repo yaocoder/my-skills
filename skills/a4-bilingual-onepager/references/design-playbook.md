@@ -283,6 +283,32 @@
 - 装饰纹理：透明度 ≤8%、绝对定位、mask 局部显影；打印已有 `print-color-adjust` 保护。
 - 所有新颜色过 `audit_contrast.py`（文字）；装饰性色块不受对比度约束但别抢文字。
 
+### 4.1 打印保真配方（PDF 里不变形的写法）
+
+屏幕上好看不够，`--print-to-pdf` 后还要一样。三条硬规则：
+
+```css
+@media print{
+  /* 1) 阴影一律关闭：小元素的 box-shadow 会被打成实心方块，看着像错位 */
+  *{ box-shadow: none !important; }
+  /* 2) 背景与渐变保留 */
+  *{ print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+```
+
+```css
+/* 3) 小圆点用 SVG 矢量，别用 border-radius:50%（3–8px 会被拉成胶囊/竖条） */
+.dot{
+  width:4px; height:4px; flex:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 4'%3E%3Ccircle cx='2' cy='2' r='2' fill='%232563EB'/%3E%3C/svg%3E")
+             no-repeat center/4px 4px;
+}
+```
+
+- 阴影去掉后卡片会变平——用已有的 `1px solid var(--line)` 描边补层次，不要加回阴影。
+- 尺寸大的圆角块（面板 10px、圆角按钮）不受影响，只有 8px 以下的小元素需要换成 SVG。
+- 改完跑 `audit_print_fidelity.py`，再用 `qlmanage`（PDFKit/Preview 同源）出图目检——PyMuPDF 渲染正常不代表 Preview 正常。
+
 ---
 
 ## 5. 设计评审清单（并入 SKILL 第 7 步循环，先于机械校验）
@@ -303,5 +329,6 @@
 - [ ] `measure_layout.py`（图示吃高度，必跑）
 - [ ] `verify_preview.py` ×2
 - [ ] `audit_contrast.py`
+- [ ] `audit_print_fidelity.py`（导出 PDF 前）
 
 **中英镜像**：同区块两页视觉等价（结构、锚点、图示一致，仅文案不同）。

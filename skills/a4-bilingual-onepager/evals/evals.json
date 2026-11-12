@@ -24,10 +24,16 @@
     },
     {
       "id": 3,
-      "name": "ai-camera-two-sided",
-      "prompt": "请根据以下文档 <workspace>/iteration-2/eval-ai-camera-two-sided/inputs/AI摄像机快速定制明白纸.docx 制作\n请注意：\n1、只制作中文版，2 页即可，制作宣传品时会是正反面；\n2、第一页着重讲明事情，第二页介绍企业能力。\n\n（源自真实会话 ses_e36829257ffewUwQK1amfuZl9Z 的原始需求；iteration-2 用它检验优化后的技能——重点看设计四支柱：配色、排版组织、图示化、美观与占位图）",
+      "name": "ai-camera-two-sided",      "prompt": "请根据以下文档 <workspace>/iteration-2/eval-ai-camera-two-sided/inputs/AI摄像机快速定制明白纸.docx 制作\n请注意：\n1、只制作中文版，2 页即可，制作宣传品时会是正反面；\n2、第一页着重讲明事情，第二页介绍企业能力。\n\n（源自真实会话 ses_e36829257ffewUwQK1amfuZl9Z 的原始需求；iteration-2 用它检验优化后的技能——重点看设计四支柱：配色、排版组织、图示化、美观与占位图）",
       "expected_output": "中文双面 2 页 A4：两页同源 HTML + 构建脚本 + 两页 PNG 预览 + 文案定稿方案文档；版面工程校验全过，且具设计感（视觉锚点≥3、有真图示、区块标题统一模子、字号阶梯≥5级、素材/占位规范）。",
       "files": ["inputs/AI摄像机快速定制明白纸.docx"]
+    },
+    {
+      "id": 4,
+      "name": "fix-pdf-fidelity",
+      "prompt": "用户反馈：一页纸导出 PDF 后，编号徽章旁出现方形色块、整体看着像错位，选型表的圆点变成竖条。HTML 在浏览器里完全正常，版面脚本也全绿。修复到导出 PDF 与网页一致。",
+      "expected_output": "修复稿：@media print 关闭全部 box-shadow；所有 ≤8px 的圆点改用 SVG data-uri（不再用 border-radius:50%）；audit_print_fidelity.py 通过；并用 qlmanage（PDFKit/Preview 同源）出图确认徽章无方块、圆点为正圆——不能只用 PyMuPDF 验收。",
+      "files": []
     }
   ]
 }

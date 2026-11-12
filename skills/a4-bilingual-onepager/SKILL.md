@@ -87,6 +87,30 @@ python3 scripts/audit_contrast.py onepager.html --min 4.5
 
 - 打印时背景默认会丢：`@media print` 里加 `* { print-color-adjust: exact; }`，否则渐变/色块背景在 PDF 里直接消失。
 
+### 4.1 打印保真（PDF 与网页不一致的三大来源）
+
+对比度只解决「看得清」，还要解决「长得一样」。以下写法在浏览器里完全正常，`--print-to-pdf` 后必变形（真实项目踩过，用户会反馈「PDF 和网页错位、符号变形」）：
+
+| 写法 | PDF 里的表现 | 修法 |
+|---|---|---|
+| 小元素上的 `box-shadow`（编号徽章、案例编号、小标签） | 阴影被打印成**实心色块**，看着像元素错位 | `@media print { * { box-shadow: none !important; } }`，层次交给已有的 1px 描边 |
+| 用 `border-radius:50%` 画 3–8px 小圆点 | 圆被拉成**胶囊/竖条** | 改用 SVG data-uri 圆（代码见 playbook 第 4 节） |
+| 缺 `print-color-adjust` | 背景/渐变整片消失 | 见上一条 |
+
+每轮改样式后跑静态审计（不需要浏览器）：
+
+```bash
+python3 scripts/audit_print_fidelity.py onepager.html
+```
+
+**验收必须用目标阅读器引擎**：PyMuPDF 或浏览器内预览通过，不代表 Preview / Foxit / Adobe 通过。macOS 用 PDFKit（与 Preview 同源）出图复验：
+
+```bash
+qlmanage -t -s 1600 -o /tmp/pdfcheck out.pdf     # 生成首页缩略图
+```
+
+多页先用 PyMuPDF 拆成单页 PDF 再逐页 `qlmanage`。目检重点：徽章周围有无方块、列表圆点是否圆、chevron 剪贴路径是否完整、渐变有无断层。
+
 ## 第 5 步：视觉设计（设计感四支柱）
 
 工程校验保证「不出错」，这一步保证「好看」。最常见的差评是「设计感太差：配色素、排版平、全是文字没图示、不美观」——四支柱逐条解决。完整配色表、字号阶梯、可直接粘贴的 CSS/SVG 图示配方、图标集与评审清单见 **`references/design-playbook.md`**（改设计前先读它）：
@@ -109,7 +133,8 @@ python3 scripts/audit_contrast.py onepager.html --min 4.5
 build.sh 约定（模板：`assets/build.sh.template`）：
 
 - `./build.sh` → 中英 PNG 预览（迭代用）；
-- `./build.sh --pdf` → 才导出 PDF，**只在用户确认定稿后执行**（PNG 是迭代产物，PDF 是交付物）。
+- `./build.sh --pdf` → 才导出 PDF，**只在用户确认定稿后执行**（PNG 是迭代产物，PDF 是交付物）；
+- 导出后必须校验产物：输出目录先 `mkdir -p`，写完检查文件存在且非空——Chrome 在目录不存在时**静默失败**，而错误常被 `2>/dev/null` 吞掉，脚本会假报成功。
 
 每轮改动后的固定动作：
 
@@ -133,8 +158,9 @@ build.sh 约定（模板：`assets/build.sh.template`）：
 
 1. 用户明确定稿 → `./build.sh --pdf`；
 2. PDF 验收：每语言 1 页、A4 尺寸、背景与文字色齐全（print-color-adjust 生效）、文字可选中（矢量未栅格化）；
-3. 回写方案文档：定稿文案、素材表、色板与守则、对齐记录——文档是唯一事实源，HTML 是它的实现，两边永远同步；
-4. 提交时预览 PNG 随库留档，后续 diff 一眼看出版面变化。
+3. **用目标阅读器引擎复验**：`qlmanage`（macOS PDFKit，与 Preview 同源）出图目检阴影、圆点、剪贴路径——PyMuPDF 能过，Preview 未必能过；
+4. 回写方案文档：定稿文案、素材表、色板与守则、对齐记录——文档是唯一事实源，HTML 是它的实现，两边永远同步；
+5. 提交时预览 PNG 随库留档，后续 diff 一眼看出版面变化。
 
 ## 常见坑（本流程真实踩过）
 
@@ -151,6 +177,11 @@ build.sh 约定（模板：`assets/build.sh.template`）：
 | 定稿后又想微调 | PDF 已是交付物 | 永远改 HTML → 重建 → 再导出，不手改 PDF |
 | 页面素、设计感差（配色平/排版挤/没图示） | 只做了工程校验、没有设计步骤 | 走第 5 步四支柱 + playbook 配方与评审清单 |
 | 加了图示后版面溢出 | 图比文字吃高度 | 回第 3 步跑 measure_layout，收别的区块或缩图 |
+| 徽章/小元素旁出现方形色块、看着像错位 | `box-shadow` 被 PDF 打成实心方块 | `@media print` 里关掉全部阴影，层次用 1px 描边 |
+| 列表圆点变竖条/胶囊 | 小尺寸 `border-radius:50%` 打印失真 | 改 SVG data-uri 圆，跑 `audit_print_fidelity.py` |
+| PDF 与网页不一致，但脚本全绿 | 只用了单一渲染器验收 | 用目标阅读器引擎（`qlmanage`/PDFKit）出图复验 |
+| 脚本报「PDF 已生成」但文件不存在 | 输出目录不存在，Chrome 静默失败且错误被 `2>/dev/null` 吞掉 | `build.sh` 先 `mkdir -p`，导出后校验文件存在且非空 |
+| 装饰元素越界，测高报假 CLIPPED | `scrollHeight` 只统计右下方向溢出 | 装饰越界朝左上（top/left 负值），不要用 right/bottom 负值 |
 
 ## 脚本
 
@@ -159,5 +190,6 @@ build.sh 约定（模板：`assets/build.sh.template`）：
 | `scripts/measure_layout.py <html>` | 两趟测高：自然总账 + 渲染态裁切/溢出 | 每轮版式改动后，导出前必跑 |
 | `scripts/verify_preview.py <png>` | 预览图验收：尺寸/边距渗出/内容非空白 | 每轮重建后 |
 | `scripts/audit_contrast.py <html>` | 抽取全部文字色，输出对白底/浅面/深底对比度矩阵 | 每轮改色后，导出前必跑 |
+| `scripts/audit_print_fidelity.py <html>` | 打印保真静态审计：阴影未关/小圆角圆点/背景打印开关 | 每轮改样式后，导出 PDF 前必跑 |
 
-三个脚本均以退出码表达结论（0=通过），可直接串进构建流程。
+四个脚本均以退出码表达结论（0=通过），可直接串进构建流程。

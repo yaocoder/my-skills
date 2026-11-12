@@ -15,6 +15,9 @@ SRC="onepager.html"
 # A4 @96dpi = 794×1123；上下各留 24px 页边距 → 截图窗口高度 1171
 PAGE_W=794
 PAGE_H=1171
+OUT="../assets"
+# 输出目录不存在时 Chrome 会静默失败（错误被 2>/dev/null 吞掉），脚本却假报成功
+mkdir -p "$OUT"
 
 # data-lang 占位替换，生成单语言临时页（一个模板出中英两页）
 gen() { # $1=zh|en
@@ -37,21 +40,25 @@ render_pdf() { # $1=zh|en $2=out.pdf
     --print-to-pdf="$2" --no-pdf-header-footer \
     --virtual-time-budget=3000 \
     "file://$(pwd)/.build-$1.html" 2>/dev/null
+  # 产物校验：Chrome 失败时不会返回非零，只能靠文件本身判断
+  [[ -s "$2" ]] || { echo "❌ PDF 未生成：$2（检查输出目录与 Chrome）"; exit 1; }
   echo "PDF  $2"
 }
 
 render_png zh preview-zh.png
 render_png en preview-en.png
 
-# 导出前硬校验（任一不过即失败，防止带着裁切/溢出出 PDF）
+# 导出前硬校验（任一不过即失败，防止带着裁切/溢出/变形出 PDF）
 python3 scripts/measure_layout.py "$SRC"
 python3 scripts/verify_preview.py preview-zh.png
 python3 scripts/verify_preview.py preview-en.png
 python3 scripts/audit_contrast.py "$SRC"
+python3 scripts/audit_print_fidelity.py "$SRC"
 
 if [[ "${1:-}" == "--pdf" ]]; then
-  render_pdf zh "../assets/xxx-ZH.pdf"
-  render_pdf en "../assets/xxx-EN.pdf"
+  render_pdf zh "$OUT/xxx-ZH.pdf"
+  render_pdf en "$OUT/xxx-EN.pdf"
+  echo "提示：导出后用 qlmanage -t -s 1600 -o /tmp/pdfcheck <pdf> 目检（PDFKit 与 Preview 同源）"
 else
   echo "(PDF 未导出——确认预览后加 --pdf 参数再生成)"
 fi
